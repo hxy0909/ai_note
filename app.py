@@ -2,6 +2,7 @@ import streamlit as st
 import whisper
 import google.generativeai as genai
 import os
+import datetime
 
 # 設定 Gemini API
 genai.configure(api_key="AIzaSyANkRNrbdeGOcpicfhkwwuWLqqulwxcKD8")
@@ -36,4 +37,23 @@ if uploaded_file is not None:
             response = ai_model.generate_content(prompt)
             
         st.subheader("✨ AI 整理後的筆記")
+
         st.markdown(response.text)
+
+if response.text:
+    st.subheader("✨ AI 整理後的筆記")
+    note_content = response.text
+    st.markdown(note_content)
+
+    st.divider()
+    
+    # 讓使用者輸入想要存檔的名字
+    today = datetime.date.today().strftime("%Y%m%d")
+    custom_name = st.text_input("輸入存檔名稱：", value=f"課堂筆記_{today}")
+
+    st.download_button(
+        label="📥 下載筆記檔案",
+        data=note_content,
+        file_name=f"{custom_name}.md",
+        mime="text/markdown",
+    )
