@@ -26,13 +26,10 @@ tab1, tab2 = st.tabs(["🎤 現錄語音", "📂 上傳檔案"])
 audio_source = None
 
 with tab1:
-    st.write("點擊下方圖示開始錄製課堂內容：")
-    # 修正後的錄音組件參數
     audio_record = mic_recorder(
         start_prompt="🎤 開始錄音",
         stop_prompt="🛑 停止錄音",
         key='recorder'
-    )
     
     if audio_record:
         # 這裡從 audio_record['bytes'] 獲取資料
@@ -62,7 +59,7 @@ if audio_source:
             
             # 2. Gemini 整理
             with st.spinner("正在生成筆記..."):
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel(model_name='gemini-1.5-flash')
                 prompt = f"請將以下課堂逐字稿整理成結構化筆記，包含：摘要、重點條列、關鍵詞：\n\n{transcript_text}"
                 response = model.generate_content(prompt)
                 ai_note = response.text
@@ -84,4 +81,5 @@ if audio_source:
             st.error(f"錯誤：{e}")
 else:
     st.info("請先錄音或上傳音檔。")
+
 
