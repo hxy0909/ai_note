@@ -27,19 +27,19 @@ audio_source = None
 
 with tab1:
     st.write("點擊下方圖示開始錄製課堂內容：")
-    # 錄音組件
+    # 修正後的錄音組件參數
     audio_record = mic_recorder(
-        start_prompt="開始錄音",
-        stop_prompt="停止錄音",
-        just_once=False,
-        use_recorder=True,
+        start_prompt="🎤 開始錄音",
+        stop_prompt="🛑 停止錄音",
         key='recorder'
     )
+    
     if audio_record:
+        # 這裡從 audio_record['bytes'] 獲取資料
         audio_source = {"content": audio_record['bytes'], "name": "recorded_audio.mp3"}
         st.audio(audio_source["content"])
-        st.success("錄音已就緒！")
-
+        st.success("✅ 錄音已就緒！")
+        
 with tab2:
     uploaded_file = st.file_uploader("選擇音檔 (mp3, wav, m4a)", type=["mp3", "wav", "m4a"])
     if uploaded_file:
@@ -84,3 +84,4 @@ if audio_source:
             st.error(f"錯誤：{e}")
 else:
     st.info("請先錄音或上傳音檔。")
+
