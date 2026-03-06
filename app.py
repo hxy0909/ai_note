@@ -56,17 +56,20 @@ if audio_source:
                 )
                 transcript_text = transcription
             
-            # 2. Gemini 整理筆記 (加上錯誤防護與縮排修復)
+            # 2. Gemini 整理筆記 (修正縮排與模型名稱)
             with st.spinner("正在生成筆記..."):
                 try:
-                    # 優先嘗試 1.5-flash
-                    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+                    # 使用目前最穩定的模型名稱
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     prompt = f"你是一位專業的筆記秘書。請將以下逐字稿整理成結構化、條理分明的筆記：\n\n{transcript_text}"
+                    
+                    # 這裡縮排必須一致 (4個空格)
                     response = model.generate_content(prompt)
                     ai_note = response.text
-                except Exception:
-                    # 如果 flash 報錯，自動切換到 gemini-pro
-                    model = genai.GenerativeModel(model_name='gemini-pro')
+                except Exception as e:
+                    # 如果上述失敗，嘗試不帶 v1beta 的路徑
+                    st.warning("嘗試 1.5-flash 失敗，切換至備用方案...")
+                    model = genai.GenerativeModel('gemini-1.0-pro')
                     response = model.generate_content(prompt)
                     ai_note = response.text
 
@@ -87,3 +90,4 @@ if audio_source:
             st.error(f"❌ 發生錯誤：{e}")
 else:
     st.info("💡 請先錄音或上傳音檔。")
+
