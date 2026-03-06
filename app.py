@@ -46,7 +46,7 @@ with tab2:
 if audio_source:
     if st.button("🚀 開始製作 AI 筆記"):
         try:
-            # 1. Groq 轉錄
+            # 1. Groq 轉錄 (Whisper)
             with st.spinner("正在辨識語音中..."):
                 transcription = groq_client.audio.transcriptions.create(
                     file=(audio_source["name"], audio_source["content"]),
@@ -56,20 +56,18 @@ if audio_source:
                 )
                 transcript_text = transcription
             
-            # 2. Gemini 整理筆記 (修正縮排與模型名稱)
+            # 2. Gemini 整理筆記 (修正縮排與 404 問題)
             with st.spinner("正在生成筆記..."):
+                # 使用不帶 v1beta 路徑的最安全模型名稱
                 try:
-                    # 使用目前最穩定的模型名稱
+                    # 優先嘗試目前的旗艦模型
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     prompt = f"你是一位專業的筆記秘書。請將以下逐字稿整理成結構化、條理分明的筆記：\n\n{transcript_text}"
-                    
-                    # 這裡縮排必須一致 (4個空格)
                     response = model.generate_content(prompt)
                     ai_note = response.text
-                except Exception as e:
-                    # 如果上述失敗，嘗試不帶 v1beta 的路徑
-                    st.warning("嘗試 1.5-flash 失敗，切換至備用方案...")
-                    model = genai.GenerativeModel('gemini-1.0-pro')
+                except Exception:
+                    # 如果上述失敗，嘗試最基礎的穩定名稱 (不加 models/ 前綴)
+                    model = genai.GenerativeModel('gemini-pro')
                     response = model.generate_content(prompt)
                     ai_note = response.text
 
@@ -90,4 +88,3 @@ if audio_source:
             st.error(f"❌ 發生錯誤：{e}")
 else:
     st.info("💡 請先錄音或上傳音檔。")
-
