@@ -26,13 +26,11 @@ audio_source = None
 
 with tab1:
     st.write("點擊下方圖示開始錄製：")
-    # 【修正 1】確保括號完全閉合，並使用最精簡參數預防 TypeError
     audio_record = mic_recorder(
         start_prompt="🎤 開始錄音",
         stop_prompt="🛑 停止錄音",
         key='recorder'
     )
-    
     if audio_record:
         audio_source = {"content": audio_record['bytes'], "name": "recorded_audio.mp3"}
         st.audio(audio_source["content"])
@@ -44,7 +42,7 @@ with tab2:
         audio_source = {"content": uploaded_file.read(), "name": uploaded_file.name}
         st.audio(audio_source["content"])
 
-# --- 處理邏輯 ---
+# --- 核心處理邏輯 ---
 if audio_source:
     if st.button("🚀 開始製作 AI 筆記"):
         try:
@@ -58,20 +56,19 @@ if audio_source:
                 )
                 transcript_text = transcription
             
-            # 2. Gemini 整理
+            # 2. Gemini 整理筆記 (加上錯誤防護與縮排修復)
             with st.spinner("正在生成筆記..."):
-    try:
-        # 優先嘗試最新的 1.5-flash
-        model = genai.GenerativeModel(model_name='gemini-1.5-flash')
-        prompt = f"你是一位專業的筆記秘書。請將以下逐字稿整理成條理分明的筆記：\n\n{transcript_text}"
-        response = model.generate_content(prompt)
-        ai_note = response.text
-    except Exception as e:
-        # 如果 flash 報錯，自動切換到穩定的 gemini-pro
-        st.warning("嘗試使用 Gemini 1.5 Flash 失敗，正在自動切換備用模型...")
-        model = genai.GenerativeModel(model_name='gemini-pro')
-        response = model.generate_content(prompt)
-        ai_note = response.text
+                try:
+                    # 優先嘗試 1.5-flash
+                    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+                    prompt = f"你是一位專業的筆記秘書。請將以下逐字稿整理成結構化、條理分明的筆記：\n\n{transcript_text}"
+                    response = model.generate_content(prompt)
+                    ai_note = response.text
+                except Exception:
+                    # 如果 flash 報錯，自動切換到 gemini-pro
+                    model = genai.GenerativeModel(model_name='gemini-pro')
+                    response = model.generate_content(prompt)
+                    ai_note = response.text
 
             # 3. 顯示與下載
             st.subheader("✨ AI 整理後的筆記")
@@ -88,7 +85,5 @@ if audio_source:
 
         except Exception as e:
             st.error(f"❌ 發生錯誤：{e}")
-            st.info("提示：如果出現 404 錯誤，請檢查 requirements.txt 是否包含 google-generativeai>=0.5.0")
 else:
     st.info("💡 請先錄音或上傳音檔。")
-
